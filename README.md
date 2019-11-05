@@ -61,11 +61,15 @@ Deferred rendering is done in two passes. The first pass takes in the world posi
 
 In a second pass, we use our uv values to read in from the textures generated in the first pass. We now have access to our position, normals, and albedo. In this pass, we also read from our light buffer, which stores the light position, radius, and color data. This provides enough information about the geometry and the lights to perform lighting and shading calculations on the scene, creating a complete image.
 
+Albedo           |  Position        | Normal
+:-------------------------:|:-------------------------:|:-------------------------:
+![](images/AlbedoLayer.PNG)| ![](images/PositionLayer.PNG) |![](images/NormalLayer.PNG)
+
 ### With Clustering
 Clustering can also be applied to deferred shading. To perform the lighting calculations on the scene, the naive solution is to iterate over all of the lights in the scene and perform shading with the fragment based on the data passed in through the textures. However, we can apply the same process as in forward+ shading and find the cluster of the fragment being shaded. We can pass in the same cluster buffer generated before, and access all of the lights that affect the cluster of our fragment, reducing the number of lighting calculations we must perform in the deferred shader.
 
 ### Specular Lighting
-![](images/Specular.gif)
+![](images/specular.gif)
 
 Specular lighting involves adding highlights to the geometry in areas that are more strongly hit by the light sources. To do this, we can generate a specular reflective term using the normal of the geometry and the direction from the fragment to the light source:
 ```
@@ -76,11 +80,27 @@ For my specular reflections, I set initial specular intensity to 30, which gives
 fragmentColor += albedo * (lambertTerm _ reflectiveTerm) * lightColor * lightIntensity
 ```
 Below are examples with varying specular powers and scales:
-Scale 1, Power 5           |  Scale 3, Power 25        | Scale 10, Power 50
+
+Scale 1 Power 5           |  Scale 3 Power 25        | Scale 10 Power 50
 :-------------------------:|:-------------------------:|:-------------------------:
-![](images/SpecularPower5.gif)| ![](images/SpecularPower25.gif) |![](images/SpecularPower50.gif)
+![](images/SpecularPower5.PNG)| ![](images/SpecularPower25.PNG) |![](images/SpecularPower50.PNG)
 
 ### Toon Shading
+![](images/toon.gif)
+
+Toon shading has two elements: ramp shading and outlines. For ramp shading, I calculate the luminance of the output color using the following equation:
+```
+luminance = 0.2126 * R + 0.7152 * G + 0.0722 * B
+```
+
+I then group the luminance into discrete levels. If above 0.95, the color remains its original color. If above 0.4, the color is scaled by 0.8. If above 0.25, the color is scaled by 0.5. I continue this for 5 steps. 
+
+To get the outlines, I first get the depth of the surrounding 8 pixels by accessing the position texture at the surrounding pixels. I take the horizontal and vertical gradient of the surrounding 8 pixels and perform a length calculation on them:
+```
+scale = sqrt(horizontal^2 + vertical^2)
+```
+If this scale value is high, that means there is a significant change in depth, meaning there is an edge at that position. To create the outline, if the scale value is above 0.9, I change the output color to the outline color, which in this case, is purple.
+
 ### Optimizations
 #### 2 Component Normals and Packed Values into Vec4s
 Each pixel in a texture can hold 4 values, R, G, B, and Alpha. In the above description, we only use the R, G, and B channels of each of the three textures. To optimize, we can pack our vec4s by using the alpha channel. We have 9 values to pass through to the texture, so even if we did pack all 4 channels, we would still need 3 textures, and the fourth would only utilize one of its channels, not improving efficiency. However, we can also cut out one of the components of the normal data. Because normals are normalized, we know that their length is 1. Therefore, if we have 2 of the 3 components of the normal, we can calculate the third by figuring out what value would make its length 1.
@@ -91,8 +111,6 @@ normalZ = sqrt(1 - normalX^2 - normalY^2)
 ```
 Performance analysis of this optimization can be found below in the section on performance analysis.
 
-#### Reconstructing Position from Camera Matrices
-
 # Performance Analysis
 ## Forward, Forward+, Deferred
 ## Deferred Optimizations
@@ -100,4 +118,4 @@ Performance analysis of this optimization can be found below in the section on p
 # Bloopers
 When testing the output of my deferred texture passes, I accidentally combined texture components in a way that created an interesting black and white cartoon effect.
 
-# INSERT IMAGE OF CARTOON EFFECT BLOOPER HERE
+![](images/CartoonBlooper.png)
