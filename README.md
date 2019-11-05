@@ -16,7 +16,10 @@ WebGL Clustered and Forward+ Shading
 # LIVE DEMO LINK
 [![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
 
-# CONVERT INTERACTION TO GIF
+<p align="center">
+  <img width=100% src="images/Interaction.gif">
+</p>
+Note that the above gif is reduced quality due to its length
 
 # Overview
 In this project, I implemented a Forward+ and clustered deferred renderer with additional effects and optimizations. A forward renderer iterates inefficientyly over every light for every point in the scene. A Forward+ renderer divides the scene into clusters and determines which lights affect each cluster. Therefore, when rendering, we only need to perform light calculations on the lights that affect the current cluster. A deferred renderer performs an initial pass that stores scene information in textures, which are used in a second pass for lighting calculations. This process decouples scene complexity from lighting, enabling efficient rendering of complex scenes with many lights. Clustering also applies here, as we can avoid sampling all the lights and just focus on ones in the relevant clusters. For the clustered deferred renderer, I added specularity and tested various optimizations. 
@@ -75,7 +78,7 @@ Specular lighting involves adding highlights to the geometry in areas that are m
 ```
 reflectiveTerm = pow(abs(dot(normal, directionToLight)), specularIntensity)
 ```
-For my specular reflections, I set initial specular intensity to 30, which gives noticable shine and highlights, but ones that are still fairly smooth and not too harsh. The user can adjust the intensity to their liking. I also added the ability for the user to scale the influence of the specular term. They can scale it to 0 as well, cancelling the specular effect. This term is then added to the lambertian term in the final color calculation:
+For my specular reflections, I set initial specular intensity to 30, which gives noticable shine and highlights, but ones that are still fairly smooth and not too harsh. The user can adjust the intensity to their liking. I also added the ability for the user to scale the influence of the specular term. This term is then added to the lambertian term in the final color calculation:
 ```
 fragmentColor += albedo * (lambertTerm _ reflectiveTerm) * lightColor * lightIntensity
 ```
@@ -101,6 +104,8 @@ scale = sqrt(horizontal^2 + vertical^2)
 ```
 If this scale value is high, that means there is a significant change in depth, meaning there is an edge at that position. To create the outline, if the scale value is above 0.9, I change the output color to the outline color, which in this case, is purple.
 
+Note that the user can choose to turn on and off specular lighting and toon shading.
+
 ### Optimizations
 #### 2 Component Normals and Packed Values into Vec4s
 Each pixel in a texture can hold 4 values, R, G, B, and Alpha. In the above description, we only use the R, G, and B channels of each of the three textures. To optimize, we can pack our vec4s by using the alpha channel. We have 9 values to pass through to the texture, so even if we did pack all 4 channels, we would still need 3 textures, and the fourth would only utilize one of its channels, not improving efficiency. However, we can also cut out one of the components of the normal data. Because normals are normalized, we know that their length is 1. Therefore, if we have 2 of the 3 components of the normal, we can calculate the third by figuring out what value would make its length 1.
@@ -113,7 +118,18 @@ Performance analysis of this optimization can be found below in the section on p
 
 # Performance Analysis
 ## Forward, Forward+, Deferred
+The following chart demonstrates the relative performances of the three renderers with a varying number of lights in the scene:
+
+![](images/RendererComparisonPerformance.PNG)
+
+The data indicates that the deferred renderer is indeed the fastes of the three, and the forward+ is faster than regular forward rendering. The reason for the plateau at the top for the deferred renderer is that the maximum FPS is 144, and it reaches that up until about 750 lights. All three renderers follow a similar exponential decrease in performance as the lights increase. While the forward renderer is the only one that must go through all of the lights, as the total number of lights increase, the total number of lights per cluster increases at a similar rate. Therefore, while always faster than forward, forward+ and deferred are still similarly impacted by more lights.
+
 ## Deferred Optimizations
+The following chart compares the performance of deferred rendering with and without the vec4 packing and 2 component normals optimization:
+
+![](images/DeferredOptimizationsPerformance.PNG)
+
+The comparison shows that the optimization did improve the FPS of the deferred renderer, but not very significantly. This indicates that the slowdown of having the additional texture being passed does slow down the renderer, but is not extremeley significant relative to the overall benefit gained from deferred rendering.
 
 # Bloopers
 When testing the output of my deferred texture passes, I accidentally combined texture components in a way that created an interesting black and white cartoon effect.
