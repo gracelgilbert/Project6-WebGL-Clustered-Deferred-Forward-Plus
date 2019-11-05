@@ -12,9 +12,7 @@ WebGL Clustered and Forward+ Shading
 </p>
 
 ### Live Demo
-
-# LIVE DEMO LINK
-[![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
+[Demo Link](https://gracelgilbert.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
 
 <p align="center">
   <img width=100% src="images/Interaction.gif">
