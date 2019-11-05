@@ -22,6 +22,14 @@ export default function(params) {
     float radius;
     vec3 color;
   };
+    
+  float getDepth(float x, float y) {
+      float pixelDimX = 1.0 / float(u_dimensions.x);
+      float pixelDimY = 1.0 / float(u_dimensions.y);
+      vec3 pos = texture2D(u_gbuffers[0], v_uv + vec2(x * pixelDimX, y * pixelDimY)).xyz;
+      vec4 viewPos = u_viewMat * vec4(pos, 1.0);
+      return 1.0 - (abs(viewPos.z)) / 25.0;
+  }
 
   float ExtractFloat(sampler2D texture, int textureWidth, int textureHeight, int index, int component) {
     float u = float(index + 1) / float(textureWidth + 1);
@@ -129,7 +137,34 @@ export default function(params) {
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
 
+   
+    float topLeft = getDepth(-1.0, 1.0);
+    float topMid = getDepth(0.0, 1.0);
+    float topRight = getDepth(1.0, 1.0);
+
+    float midLeft =  getDepth(-1.0, 0.0);
+    float midMid =   getDepth(0.0, 0.0);
+    float midRight = getDepth(1.0, 0.0);
+    
+    float bottomLeft =  getDepth(-1.0, -1.0); 
+    float bottomMid =   getDepth(0.0, -1.0);
+    float bottomRight = getDepth(1.0, -1.0);
+
+    float small = 1.0;
+    float large = 40.0;
+    float h = (small * topLeft) + (large * midLeft) + (small * bottomLeft) 
+      - (small * bottomLeft) - (large * midRight) - (small * bottomRight);
+    float v = (small * topLeft) + (large * topMid) + (small * topRight) 
+      - (small * bottomLeft) - (large * bottomMid) - (small * bottomRight);
+    float scale = clamp(sqrt(h * h + v * v), 0.0, 1.0);
+
+
+
     gl_FragColor = vec4(fragColor, 1.0);
+    if (scale > 0.9) {
+      gl_FragColor = vec4(0.7, 0.4, 0.6, 1.0);
+      return;
+    }
     float intensity = 0.2126 * fragColor.x + 0.7152 * fragColor.y + 0.0722 * fragColor.z;
     if (intensity > 0.95) {
       return;
@@ -142,9 +177,10 @@ export default function(params) {
     } else {
       gl_FragColor *= vec4(vec3(0.05), 1.0);
     }
-    //gl_FragColor = vec4(fragColor, 1.0);
+    
 
-
+    //gl_FragColor = vec4(vec3(midMid), 1.0);
+    //gl_FragColor = vec4(vec3(1.0 - (abs(viewPos.z)) / 25.0), 1.0);
 
   
     // gl_FragColor = gb2 * abs(dot(gb1, gb0));
