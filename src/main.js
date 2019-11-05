@@ -11,6 +11,7 @@ const CLUSTERED = 'Clustered';
 const params = {
   renderer: FORWARD_PLUS,
   _renderer: null,
+  shine: 5,
 };
 
 setRenderer(params.renderer);
@@ -30,9 +31,13 @@ function setRenderer(renderer) {
 }
 
 gui.add(params, 'renderer', [FORWARD, FORWARD_PLUS, CLUSTERED]).onChange(setRenderer);
+gui.add(params, 'shine', 0, 50).step(1);
+
+
 
 const scene = new Scene();
 scene.loadGLTF('models/sponza/sponza.gltf');
+scene.setShine(params.shine);
 
 camera.position.set(-10, 8, 0);
 cameraControls.target.set(0, 2, 0);
@@ -40,6 +45,7 @@ gl.enable(gl.DEPTH_TEST);
 
 function render() {
   scene.update();
+  scene.setShine(params.shine);
   params._renderer.render(camera, scene);
 }
 

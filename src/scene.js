@@ -8,12 +8,13 @@ export const LIGHT_RADIUS = 5.0;
 export const LIGHT_DT = -0.03;
 
 // TODO: This controls the number of lights
-export const NUM_LIGHTS = 200;
+export const NUM_LIGHTS = 1000;
 
 class Scene {
   constructor() {
     this.lights = [];
     this.models = [];
+    this.shine = 0;
 
     for (let i = 0; i < NUM_LIGHTS; ++i) {
       this.lights.push({
@@ -30,6 +31,10 @@ class Scene {
         radius: LIGHT_RADIUS,
       });
     }
+  }
+
+  setShine(s) {
+    this.shine = s;
   }
 
   loadGLTF(url) {
