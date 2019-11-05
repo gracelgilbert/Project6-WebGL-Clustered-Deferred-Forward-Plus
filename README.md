@@ -12,12 +12,9 @@ WebGL Clustered and Forward+ Shading
 </p>
 
 ### Live Demo
-[Demo Link](https://gracelgilbert.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
+[![](images/Interaction.gif)](https://gracelgilbert.github.io/Project6-WebGL-Clustered-Deferred-Forward-Plus)
 
-<p align="center">
-  <img width=100% src="images/Interaction.gif">
-</p>
-Note that the above gif is reduced quality due to its length
+Note that the thumnail gif is reduced quality due to its length. Click on the image to run the demo for the full quality.
 
 # Overview
 In this project, I implemented a Forward+ and clustered deferred renderer with additional effects and optimizations. A forward renderer iterates inefficientyly over every light for every point in the scene. A Forward+ renderer divides the scene into clusters and determines which lights affect each cluster. Therefore, when rendering, we only need to perform light calculations on the lights that affect the current cluster. A deferred renderer performs an initial pass that stores scene information in textures, which are used in a second pass for lighting calculations. This process decouples scene complexity from lighting, enabling efficient rendering of complex scenes with many lights. Clustering also applies here, as we can avoid sampling all the lights and just focus on ones in the relevant clusters. For the clustered deferred renderer, I added specularity and tested various optimizations. 
