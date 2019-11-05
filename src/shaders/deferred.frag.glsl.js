@@ -94,6 +94,7 @@ export default function(params) {
     vec3 nor = normalize(vec3(gb0.w, gb1.w,
                     sqrt(1.0 - gb0.w * gb0.w - gb1.w * gb1.w)));
    
+    
     vec3 fragColor = vec3(0.0);
 
     vec3 fragPos = vec3(gl_FragCoord.x / u_dimensions.x, 
@@ -139,7 +140,7 @@ export default function(params) {
     fragColor += albedo * ambientLight;
 
     if (u_toon < 1) {
-      gl_FragColor = gl_FragColor = vec4(fragColor, 1.0);
+      gl_FragColor = vec4(fragColor, 1.0);
     } else {
       float topLeft = getDepth(-1.0, 1.0);
       float topMid = getDepth(0.0, 1.0);
