@@ -3,7 +3,7 @@ import { NUM_LIGHTS, LIGHT_RADIUS } from '../scene';
 import {vec4, vec3} from 'gl-matrix';
 import { ENABLE_SIMD } from 'gl-matrix/src/gl-matrix/common';
 
-export const MAX_LIGHTS_PER_CLUSTER = 1000;
+export const MAX_LIGHTS_PER_CLUSTER = 100;
 const PI = 3.141592653589793;
 
 function sin_atan(angle) {

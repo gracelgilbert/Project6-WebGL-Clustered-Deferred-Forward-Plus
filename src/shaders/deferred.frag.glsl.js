@@ -70,14 +70,15 @@ export default function(params) {
 
   void main() {
     // TODO: extract data from g buffers and do lighting
-    vec4 gb0 = texture2D(u_gbuffers[0], v_uv); // position
-    vec4 gb1 = texture2D(u_gbuffers[1], v_uv); // normal
-    vec4 gb2 = texture2D(u_gbuffers[2], v_uv); // albedo
-    // vec4 gb3 = texture2D(u_gbuffers[3], v_uv);
+    vec4 gb0 = texture2D(u_gbuffers[0], v_uv); // position, normal x
+    vec4 gb1 = texture2D(u_gbuffers[1], v_uv); // albedo, normal y
+    //vec4 gb2 = texture2D(u_gbuffers[2], v_uv); // albedo
 
     vec3 pos = gb0.xyz;
-    vec3 nor = gb1.xyz;
-    vec3 albedo = gb2.xyz;
+    vec3 albedo = gb1.xyz;
+    vec3 nor = normalize(vec3(gb0.w, gb1.w,
+                    sqrt(1.0 - gb0.w * gb0.w - gb1.w * gb1.w)));
+   
 
     vec3 fragColor = vec3(0.0);
 
@@ -119,8 +120,8 @@ export default function(params) {
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, nor), 0.0);
 
-      // float reflectiveTerm = float(u_shine) * pow(abs(dot(normalize(nor), normalize(L))), 30.0);
-      float reflectiveTerm = 0.0;
+       float reflectiveTerm = float(u_shine) * pow(abs(dot(normalize(nor), normalize(L))), 30.0);
+      //float reflectiveTerm = 0.0;
 
       fragColor += albedo * (lambertTerm + reflectiveTerm) * light.color * vec3(lightIntensity);
     }
