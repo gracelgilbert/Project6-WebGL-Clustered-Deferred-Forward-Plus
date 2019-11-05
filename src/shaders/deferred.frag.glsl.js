@@ -130,6 +130,19 @@ export default function(params) {
     fragColor += albedo * ambientLight;
 
     gl_FragColor = vec4(fragColor, 1.0);
+    float intensity = 0.2126 * fragColor.x + 0.7152 * fragColor.y + 0.0722 * fragColor.z;
+    if (intensity > 0.95) {
+      return;
+    } else if (intensity > 0.4) {
+      gl_FragColor *= vec4(vec3(0.8), 1.0);
+    } else if (intensity > 0.25) {
+      gl_FragColor *= vec4(vec3(0.5), 1.0);
+    } else if (intensity > 0.1) {
+      gl_FragColor *= vec4(vec3(0.1), 1.0);
+    } else {
+      gl_FragColor *= vec4(vec3(0.05), 1.0);
+    }
+    //gl_FragColor = vec4(fragColor, 1.0);
 
 
 
