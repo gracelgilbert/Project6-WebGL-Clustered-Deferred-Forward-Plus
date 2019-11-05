@@ -11,6 +11,9 @@ export default function(params) {
   uniform float u_near;
   uniform float u_far;
   uniform int u_shine;
+  uniform int u_power;
+  uniform int u_specular;
+  uniform int u_toon;
   
   varying vec2 v_uv;
   
@@ -23,6 +26,7 @@ export default function(params) {
     vec3 color;
   };
     
+  
   float getDepth(float x, float y) {
       float pixelDimX = 1.0 / float(u_dimensions.x);
       float pixelDimY = 1.0 / float(u_dimensions.y);
@@ -30,6 +34,7 @@ export default function(params) {
       vec4 viewPos = u_viewMat * vec4(pos, 1.0);
       return 1.0 - (abs(viewPos.z)) / 25.0;
   }
+
 
   float ExtractFloat(sampler2D texture, int textureWidth, int textureHeight, int index, int component) {
     float u = float(index + 1) / float(textureWidth + 1);
@@ -48,6 +53,7 @@ export default function(params) {
     }
   }
 
+
   Light UnpackLight(int index) {
     Light light;
     float u = float(index + 1) / float(${params.numLights + 1});
@@ -63,6 +69,7 @@ export default function(params) {
     light.color = v2.rgb;
     return light;
   }
+
 
   // Cubic approximation of gaussian curve so we falloff to exactly 0 at the light radius
   float cubicGaussian(float h) {
@@ -87,10 +94,7 @@ export default function(params) {
     vec3 nor = normalize(vec3(gb0.w, gb1.w,
                     sqrt(1.0 - gb0.w * gb0.w - gb1.w * gb1.w)));
    
-
     vec3 fragColor = vec3(0.0);
-
-
 
     vec3 fragPos = vec3(gl_FragCoord.x / u_dimensions.x, 
       gl_FragCoord.y / u_dimensions.y, 
@@ -112,9 +116,6 @@ export default function(params) {
     float u = float(index + 1) /  float(numclusters + 1);
     int clusterNumLights = int(texture2D(u_clusterbuffer, vec2(u, 0)).x);
 
-
-
-
     for (int i = 0; i < ${params.numLights}; ++i) {
       if (i >= clusterNumLights) {
         break;
@@ -127,64 +128,57 @@ export default function(params) {
 
       float lightIntensity = cubicGaussian(2.0 * lightDistance / light.radius);
       float lambertTerm = max(dot(L, nor), 0.0);
-
-       float reflectiveTerm = float(u_shine) * pow(abs(dot(normalize(nor), normalize(L))), 30.0);
-      //float reflectiveTerm = 0.0;
-
+      float reflectiveTerm = 0.0;
+      if (u_specular > 0) {
+        reflectiveTerm = float(u_shine) * pow(abs(dot(normalize(nor), normalize(L))), float(u_power));
+      }
       fragColor += albedo * (lambertTerm + reflectiveTerm) * light.color * vec3(lightIntensity);
     }
 
     const vec3 ambientLight = vec3(0.025);
     fragColor += albedo * ambientLight;
 
-   
-    float topLeft = getDepth(-1.0, 1.0);
-    float topMid = getDepth(0.0, 1.0);
-    float topRight = getDepth(1.0, 1.0);
-
-    float midLeft =  getDepth(-1.0, 0.0);
-    float midMid =   getDepth(0.0, 0.0);
-    float midRight = getDepth(1.0, 0.0);
-    
-    float bottomLeft =  getDepth(-1.0, -1.0); 
-    float bottomMid =   getDepth(0.0, -1.0);
-    float bottomRight = getDepth(1.0, -1.0);
-
-    float small = 1.0;
-    float large = 40.0;
-    float h = (small * topLeft) + (large * midLeft) + (small * bottomLeft) 
-      - (small * bottomLeft) - (large * midRight) - (small * bottomRight);
-    float v = (small * topLeft) + (large * topMid) + (small * topRight) 
-      - (small * bottomLeft) - (large * bottomMid) - (small * bottomRight);
-    float scale = clamp(sqrt(h * h + v * v), 0.0, 1.0);
-
-
-
-    gl_FragColor = vec4(fragColor, 1.0);
-    if (scale > 0.9) {
-      gl_FragColor = vec4(0.7, 0.4, 0.6, 1.0);
-      return;
-    }
-    float intensity = 0.2126 * fragColor.x + 0.7152 * fragColor.y + 0.0722 * fragColor.z;
-    if (intensity > 0.95) {
-      return;
-    } else if (intensity > 0.4) {
-      gl_FragColor *= vec4(vec3(0.8), 1.0);
-    } else if (intensity > 0.25) {
-      gl_FragColor *= vec4(vec3(0.5), 1.0);
-    } else if (intensity > 0.1) {
-      gl_FragColor *= vec4(vec3(0.1), 1.0);
+    if (u_toon < 1) {
+      gl_FragColor = gl_FragColor = vec4(fragColor, 1.0);
     } else {
-      gl_FragColor *= vec4(vec3(0.05), 1.0);
+      float topLeft = getDepth(-1.0, 1.0);
+      float topMid = getDepth(0.0, 1.0);
+      float topRight = getDepth(1.0, 1.0);
+
+      float midLeft =  getDepth(-1.0, 0.0);
+      float midMid =   getDepth(0.0, 0.0);
+      float midRight = getDepth(1.0, 0.0);
+      
+      float bottomLeft =  getDepth(-1.0, -1.0); 
+      float bottomMid =   getDepth(0.0, -1.0);
+      float bottomRight = getDepth(1.0, -1.0);
+
+      float small = 1.0;
+      float large = 40.0;
+      float h = (small * topLeft) + (large * midLeft) + (small * bottomLeft) 
+        - (small * bottomLeft) - (large * midRight) - (small * bottomRight);
+      float v = (small * topLeft) + (large * topMid) + (small * topRight) 
+        - (small * bottomLeft) - (large * bottomMid) - (small * bottomRight);
+      float scale = clamp(sqrt(h * h + v * v), 0.0, 1.0);
+
+      gl_FragColor = vec4(fragColor, 1.0);
+      if (scale > 0.9) {
+        gl_FragColor = vec4(0.7, 0.4, 0.6, 1.0);
+        return;
+      }
+      float intensity = 0.2126 * fragColor.x + 0.7152 * fragColor.y + 0.0722 * fragColor.z;
+      if (intensity > 0.95) {
+        return;
+      } else if (intensity > 0.4) {
+        gl_FragColor *= vec4(vec3(0.8), 1.0);
+      } else if (intensity > 0.25) {
+        gl_FragColor *= vec4(vec3(0.5), 1.0);
+      } else if (intensity > 0.1) {
+        gl_FragColor *= vec4(vec3(0.1), 1.0);
+      } else {
+        gl_FragColor *= vec4(vec3(0.05), 1.0);
+      }
     }
-    
-
-    //gl_FragColor = vec4(vec3(midMid), 1.0);
-    //gl_FragColor = vec4(vec3(1.0 - (abs(viewPos.z)) / 25.0), 1.0);
-
-  
-    // gl_FragColor = gb2 * abs(dot(gb1, gb0));
-    // gl_FragColor = vec4(float(u_numslices.x), 0.0, 0.0, 1.0);
   }
   `;
 }

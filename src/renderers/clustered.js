@@ -30,7 +30,7 @@ export default class ClusteredRenderer extends BaseRenderer {
       numGBuffers: NUM_GBUFFERS,
     }), {
         uniforms: ['u_gbuffers[0]', 'u_gbuffers[1]', //'u_gbuffers[2]', 'u_gbuffers[3]', 
-            'u_lightbuffer', 'u_clusterbuffer', 'u_dimensions', 'u_viewMat', 'u_near', 'u_far', 'u_numslices', 'u_shine'],
+            'u_lightbuffer', 'u_clusterbuffer', 'u_dimensions', 'u_viewMat', 'u_near', 'u_far', 'u_numslices', 'u_shine', 'u_power', 'u_specular', 'u_toon'],
       attribs: ['a_uv'],
     });
 
@@ -170,6 +170,11 @@ export default class ClusteredRenderer extends BaseRenderer {
     gl.uniform1f(this._progShade.u_far, camera.far);
 
     gl.uniform1i(this._progShade.u_shine, scene.shine);
+    gl.uniform1i(this._progShade.u_power, scene.power);
+    gl.uniform1i(this._progShade.u_specular, scene.specular);
+    gl.uniform1i(this._progShade.u_toon, scene.toon);
+
+
 
     // Upload the camera view matrix
     gl.uniformMatrix4fv(this._progShade.u_viewMat, false, this._viewMatrix);
