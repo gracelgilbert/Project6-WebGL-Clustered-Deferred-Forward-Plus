@@ -7,17 +7,23 @@ WebGL Clustered and Forward+ Shading
   * https://www.linkedin.com/in/grace-gilbert-2493a0156, http://gracelgilbert.com
 * Tested on: Windows 10, i9-9900K @ 3.60GHz 64GB, GeForce RTX 2080 40860MB
 
-# HEADER IMAGE
+<p align="center">
+  <img width=100% src="images/200Lights.gif">
+</p>
 
 ### Live Demo
 
 # LIVE DEMO LINK
 [![](img/thumb.png)](http://TODO.github.io/Project5B-WebGL-Deferred-Shading)
 
-# GIF OF FEATURES
+# CONVERT INTERACTION TO GIF
 
 # Overview
 In this project, I implemented a Forward+ and clustered deferred renderer with additional effects and optimizations. A forward renderer iterates inefficientyly over every light for every point in the scene. A Forward+ renderer divides the scene into clusters and determines which lights affect each cluster. Therefore, when rendering, we only need to perform light calculations on the lights that affect the current cluster. A deferred renderer performs an initial pass that stores scene information in textures, which are used in a second pass for lighting calculations. This process decouples scene complexity from lighting, enabling efficient rendering of complex scenes with many lights. Clustering also applies here, as we can avoid sampling all the lights and just focus on ones in the relevant clusters. For the clustered deferred renderer, I added specularity and tested various optimizations. 
+
+100 Lights           |  200 Lights               | 400 Lights
+:-------------------------:|:-------------------------:|:-------------------------:
+![](images/100Lights.gif)| ![](images/200Lights.gif) |![](images/400Lights.gif)
 
 # Credits
 * [Three.js](https://github.com/mrdoob/three.js) by [@mrdoob](https://github.com/mrdoob) and contributors
@@ -59,6 +65,8 @@ In a second pass, we use our uv values to read in from the textures generated in
 Clustering can also be applied to deferred shading. To perform the lighting calculations on the scene, the naive solution is to iterate over all of the lights in the scene and perform shading with the fragment based on the data passed in through the textures. However, we can apply the same process as in forward+ shading and find the cluster of the fragment being shaded. We can pass in the same cluster buffer generated before, and access all of the lights that affect the cluster of our fragment, reducing the number of lighting calculations we must perform in the deferred shader.
 
 ### Specular Lighting
+![](images/Specular.gif)
+
 Specular lighting involves adding highlights to the geometry in areas that are more strongly hit by the light sources. To do this, we can generate a specular reflective term using the normal of the geometry and the direction from the fragment to the light source:
 ```
 reflectiveTerm = pow(abs(dot(normal, directionToLight)), specularIntensity)
@@ -67,8 +75,10 @@ For my specular reflections, I set initial specular intensity to 30, which gives
 ```
 fragmentColor += albedo * (lambertTerm _ reflectiveTerm) * lightColor * lightIntensity
 ```
-# GIFS WITH DIFFERENT SPECULAR SCALES
-# GIFS WITH DIFFERENT SPECULAR INTENSITIES
+Below are examples with varying specular powers and scales:
+Scale 1, Power 5           |  Scale 3, Power 25        | Scale 10, Power 50
+:-------------------------:|:-------------------------:|:-------------------------:
+![](images/SpecularPower5.gif)| ![](images/SpecularPower25.gif) |![](images/SpecularPower50.gif)
 
 ### Toon Shading
 ### Optimizations
